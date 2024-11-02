@@ -1,2 +1,2 @@
-# Estadistica
-Ejercicios y practicas de la asignatura de Estadística
+# Estadistica 💻
+Repositorio asignatura Estadistica
