@@ -1,0 +1,79 @@
+---
+title: 'Ejercicios de repaso Variables Aleatorias'
+author: "Jesús Joana (jesusjoanaazuara@gmail.com)"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# EJERCICIO 1
+
+a) Encuentra la funci´on de probabilidad de ni˜nos y ni˜nas en familas con 3 hijos, suponiendo igual probabilidad para ni˜nos y ni˜nas.
+```{r}
+i <- 0:3
+resultado <- dbinom(i, 3, prob = 0.5)
+print(resultado)
+```
+(b) Encuentra la funci´on de distribuci´on para la variable aleatoria del apartado a).
+```{r}
+i <- 0:3
+resultado2 <- pbinom(i, 3, prob = 0.5)
+print(resultado2)
+```
+(c) Dibuja la funci´on de distribuci´on.
+
+```{r}
+plot(i, resultado2, type = "s", xlim = c(0, 3), ylim = c(0, 1))
+```
+
+(d) Imag´ınate que el ´unico dato del que partes es la funci´on de distribuci´on. ¿C´omo podr´ıas hallar la
+funci´on de probabilidad?
+
+```{r}
+f_0 <- pbinom(0,3, prob = 0.5)
+f_1 <- pbinom(1, 3, prob=0.5) - pbinom(0, 3, prob=0.5)
+f_2 <- pbinom(2, 3, prob=0.5) - pbinom(1, 3, prob=0.5)
+f_3 <- pbinom(3, 3, prob = 0.5) - pbinom(2, 3, prob = 0.5)
+print(c(f_0, f_1, f_2, f_3))
+```
+
+
+# EJERCICIO 2
+
+Se realizan 12 lanzamientos de una moneda equilibrada. Determinar la distribuci´on del n´umero de caras obtenidas.
+
+```{r}
+i <- 0:12
+r2 <- dbinom(i, 12, prob = 0.5)
+print(r2)
+
+simulacion <- rbinom(10000000, 12, prob = 0.5)
+num_6 <- sum(simulacion == 6)
+prob_6 <- num_6/10000000
+prob_6
+```
+Se realizan 12 lanzamientos de una moneda equilibrada. Determinar la distribución de la diferencia entre caras y cruces (pista: nº de cruces = 12 - nº de caras). En cada caso, representar la función de probabilidad para caracterizar la distribución.
+
+```{r}
+i <- 0:12
+
+r3 <- dbinom(i, 12, prob = 0.5)
+solucion <- 2*i - 12
+
+print(c(r3, solucion))
+
+# Representación de la distribución
+
+plot(solucion, r3, type = "l", xlim = c(-12,12), ylim = c(0,0.3))
+
+```
+
+
+
+
+
+
