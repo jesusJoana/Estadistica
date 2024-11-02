@@ -1,0 +1,233 @@
+---
+title: 'Lab 1: probabilidad y variables aleatorias'
+author: "Jesús Joana (jesusjoanaazuara@gmail.com)"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objetivos de la práctica
+La práctica consiste en una colección de problemas que deberán ser resueltos
+mediante simulaciones,  usando `sample` o bien las funciones `r[name]` asociadas
+a cada distribución (por ejemplo, `rnorm`). Los objetivos de esta práctica son, 
+por tanto:
+
+* Seguir familiarizándose con el lenguaje `R`.
+* Profundizar en el uso de simulaciones para calcular probabilidades.
+
+# Entrega y evaluación 
+El deadline para la entrega de la práctica se indica en el curso virtual. 
+Cualquier trabajo recibido **fuera del plazo contará como no entregado**. La
+entrega consistirá, **obligatoriamente, en el fichero de R Markdown con 
+extensión `*.Rmd`  y el resultado de compilarlo (un `*.html`), ambos comprimidos en un
+`*.zip`. ** Concretamente:
+
+1. Recuerda poner Nombres, apellidos y email en el apartado `author` (ver más arriba). Respeta el formato establecido.
+2. Los ficheros `*.Rmd` y `*.html` deberán comprimirse en un único fichero `*.zip`. Este deberá entregarse a través del curso virtual. 
+3. Los ficheros `*.Rmd`, `*.html` y `*.zip` deberán nombrarse según el formato:
+`apellidoAlumno1_apellidoAlumno2_etc.zip` (con los apellidos por orden alfabético).
+
+
+Las prácticas que no compilen el fichero `.Rmd` generando un fichero `*.html` válido
+**no serán evaluadas**.
+
+# Buffer overflow
+En una red de computadoras, un búfer central almacena temporalmente paquetes de datos antes de ser procesados. Cada día, llegan nuevos paquetes y se eliminan los paquetes procesados del búfer. Algunos días son más ocupados que otros, donde llegan más paquetes de lo habitual. Queremos simular cuánto tiempo tarda el búfer en desbordarse, partiendo de un estado inicial de cero paquetes.
+El modelo funciona de la siguiente manera:
+
+1. Llegadas diarias de paquetes:
+    * Cada día tiene un 30% de probabilidad de ser un "día ocupado".
+    * En un día normal, el número de paquetes que llegan sigue una distribución de Poisson con un promedio de 5 paquetes.
+    * En un día ocupado, el número de paquetes que llegan sigue una distribución de Poisson con un promedio de 15 paquetes.
+2. Procesamiento diario de paquetes:
+    * El sistema procesa paquetes al final de cada día. El número de paquetes procesados sigue una distribución de Poisson con un promedio de 7 paquetes.
+3. Capacidad del búfer:
+    * El búfer tiene una capacidad máxima de 100 paquetes. Una vez que se alcanza este límite, el búfer se desborda (Buffer overflow) y el sistema falla.
+4. Secuencia de eventos:
+    * Primero, los paquetes llegan al búfer (dependiendo de si es un día ocupado o normal).
+    * Luego, el sistema procesa los paquetes. Si el número de paquetes procesados excede la carga actual del búfer, el búfer simplemente mantiene 0 paquetes para el día siguiente.
+    * Si el búfer excede la capacidad de 100 paquetes, se desborda y la simulación se detiene.
+
+**Nos interesa estimar el número esperado de días que tardará el búfer en desbordarse, partiendo de 0 paquetes.** Sigue los siguientes pasos:
+
+1. Escribe una función `simulate_buffer_overflow()` que simule cuántos días tardará el búfer en desbordarse, comenzando con 0 paquetes en el búfer. Ten en cuenta que, si el búfer falla durante el primer día, debe devolver días = 1. Usa un bucle `while` hasta que el búfer alcance o exceda los 100 paquetes.
+
+
+```{r buffer_i}
+simulate_buffer_overflow <- function(){
+  
+  buffer_ocupado <- 0
+  buffer_maximo <- 100
+  dia_num <- 1
+
+  # Empiezo la simulacion, decido si el primer dia es ocupado(0) o normal(1)
+  while(buffer_ocupado <= buffer_maximo){
+    dia <- rbinom(1,1,0.7)
+    if(dia == 1){
+      buffer_ocupado = buffer_ocupado + rpois(1, 5) - rpois(1, 7)
+      if(buffer_ocupado < 0){
+        buffer_ocupado = 0
+      }
+      dia_num <- dia_num + 1
+    } else {
+      buffer_ocupado = buffer_ocupado + rpois(1, 15) - rpois(1, 7)
+      if(buffer_ocupado < 0){
+        buffer_ocupado = 0
+      }
+      dia_num <- dia_num + 1
+    }
+    if(dia_num == 1){
+      break
+    }
+  }
+  return(dia_num)
+}
+
+numero_dias <- simulate_buffer_overflow()
+print(numero_dias)
+```
+
+2. Simula este escenario 10,000 veces usando `replicate`, y calcula el número promedio de días hasta que el búfer se desborde.
+
+```{r buffer_ii}
+
+simulacion <- replicate(10000, {
+  simulate_buffer_overflow()
+  
+})
+resultado <- mean(simulacion)
+resultado
+
+```
+
+**Tu respuesta final, aquí**
+
+
+# Tiempo hasta el fallo del sistema
+En un sistema de computación basado en la nube, tres máquinas virtuales (VMs) están realizando cálculos en paralelo para una aplicación crítica. Cada VM tiene una probabilidad de 
+fallar debido a diversos factores como errores de software, problemas de hardware o interrupciones de red.
+
+Los tiempos hasta el fallo para cada VM, denotados como $D_1$, $D_2$, y $D_3$, son independientes y siguen distribuciones exponenciales con el mismo parámetro
+$\lambda_1 = \lambda_2 = \lambda_3 = 1$ (medido en fallos por unidad de tiempo, por ejemplo, 1 fallo por hora en promedio).
+
+La aplicación está diseñada con redundancia, por lo que continúa funcionando mientras al menos una de las VMs siga operativa. Esto proporciona alta disponibilidad y tolerancia a fallos.
+
+Sea $T_{\text{fallo}}$ el tiempo cuando **las tres VMs han fallado**, lo que resulta en una interrupción completa del servicio. Queremos verificar mediante simulaciones que la distribución de $T_{\text{fallo}}$ sigue la siguiente función de densidad de probabilidad:
+
+$$
+f(t) = \begin{cases}
+3 (1 - e^{-t})^2 \cdot e^{-t} \qquad t \geq 0\\
+0 \qquad \qquad\text{en cualquier otro caso}
+\end{cases}
+$$
+
+Para ello, sigue estos pasos:
+a. Escribe el código necesario para simular la variable $T_{\text{fallo}}$. Almacena el resultado de las simulaciones en la variable `shutdown_sims` (pista: echa un vistazo a `pmin` y `pmax`).
+
+```{r failure_i}
+shutdown_sims = NULL # ???
+# ...
+```
+
+b. Estima la distribución a partir de las simulaciones usando un **histograma** 
+   (función `hist`; consulta la ayuda para dibujar una densidad de probabilidad 
+   en lugar del número de ocurrencias) y...
+
+c. ... compara el histograma obtenido con la distribución teórica. Para ello, implementa en primer lugar `f_theo` y luego dibuja en un mismo gráfico la 
+   distribución obtenida por simulaciones y la dada por `f_theo`
+   (usando `lines`).
+ 
+```{r failure_ii_and_iii}
+f_theo = NULL # ???
+# ...
+```
+
+
+# Distribución de servidores vacíos en un sistema de base de datos distribuida
+
+En un sistema de base de datos distribuida, los datos se asignan aleatoriamente a diferentes servidores para su almacenamiento. Hay `n_servers` servidores y `n_datablock` bloques de datos. Cada bloque de datos se asigna independientemente a uno de los `n_servers` servidores, pero algunos servidores podrían no recibir ningún bloque de datos. Nos interesa determinar la distribución de la variable aleatoria $E$: "el número de servidores que no almacenan ningún bloque de datos ($E$=*Empty*=Vacíos)." Procede de la siguiente manera:
+
+a. Escribe una función con prototipo `simulate_empty(n_servers, n_datablocks)` que devuelva una única 
+simulación de E (el número de servidores vacíos). Consejo: la función `table` puede ser útil.
+
+```{r db_i}
+# ?????????
+```
+
+b. Generalmente, usamos simulaciones para calcular la probabilidad de un evento
+en concreto (por ejemplo, para calcular $P(E=2)$). En estas situaciones, tenemos
+una única definición de evento exitoso. Sin embargo, en este problema queremos
+calcular $P(E=e)$ para cualquier valor válido de e... ¡y lo queremos hacer llamando
+una única vez a `replicate`! Esto implica que, para una sola simulación, tendremos
+que comprobar si la simulación ha sido exitosa para todos los valores válidos de e. 
+Esto se puede hacer fácilmente. Por ejemplo, para 10 servidores y 7 bloques de dato (no hace
+falta hacer nada, solo entender):
+
+```{r db_ii}
+# Uncomment the following after completing the previous task
+# simulate_empty(n_servers = 10, n_datablocks = 7) == 0:10
+```
+
+c. Usando la observación anterior, escribe una función con prototipo 
+`distribution_empty(n_servers, n_datablocks, n_sims)` que calcule mediante simulaciones la 
+función de probabilidad completa para la variable aleatoria $E$.
+
+```{r db_iii}
+# ???
+```
+
+d. Usa esta función para dibujar la función de probabilidad de la variable 
+aleatoria "nº de servidores vacíos si se distribuyen 13 bloques de datos en 
+5 servidores".
+
+```{r db_plot}
+# ??????
+```
+
+# Casa inteligente: Estimación del consumo energético
+
+En un sistema de casa inteligente, el consumo diario de energía de los dispositivos se puede modelar utilizando un modelo probabilístico de tres etapas. Considera el siguiente escenario para un día en el sistema de casa inteligente (desde la medianoche hasta la medianoche):
+
+1. El número total de dispositivos $D$ que potencialmente pueden consumir energía en la casa sigue una distribución de Poisson con una media de 10 dispositivos. Esto refleja la variabilidad en el número de dispositivos activos cada día.
+
+2. Entre estos dispositivos, una cierta proporción se clasifica como dispositivos de "alta energía". Es decir, consumen más energía que un dispositivo normal. Cada uno de los $D = d$ dispositivos tiene una probabilidad de $p = 0.6$ de ser un dispositivo de "alta energía". Sea $H$ la variable aleatoria: "Número de dispositivos de alta energía".
+
+3. El consumo total de energía $E$ en kilovatios-hora (kWh) durante el día está influenciado tanto por el número de dispositivos de alta energía $H$ como por el número total de dispositivos normales. La energía consumida por cada dispositivo de alta energía sigue una distribución Normal con una media de 6 kWh y una desviación estándar de 0.75 kWh. La energía consumida por cada uno de los dispositivos normales sigue una distribución Normal con una media de 4 kWh y una desviación estándar de 0.75 kWh. El consumo total de energía $E$ se puede expresar como la suma del consumo de todos los dispositivos.
+
+**Tu tarea es estimar el número de dispositivos de alta energía $H$ basándote en el consumo total de energía $E$**. Sigue estos pasos:
+
+a. Escribe una función `simulate_all(n_sims)` que genere simulaciones para las tres variables aleatorias $D$, $H$ y $E$. Asegúrate de que el resultado final sea una matriz de dimensiones `n_sims x 3` utilizando `cbind`, y evita usar `replicate` por eficiencia. Para simular de forma eficiente la variable $E$, piensa antes en el siguiente caso particular: Si hay $D=5$ dispositivos y $H=3$ dispositivos de "alta energía", escribe la distribución de la variable aleatoria $E$:
+
+```{r smarthome_i}
+# ?????
+```
+
+b. Como $D$ no es relevante para tu objetivo final, puedes marginalizarlo. 
+Marginalizar por simulaciones es sencillo. En vez de devolver 
+`c(d, h, e)` basta con ignorar `d` y devolver `c(h, e)`. Escribe `sim_h_e(n_sims)` 
+para generar  simulaciones de las variables $H$ y $E$. (Ten en cuenta que copiar 
+y pegar código es un crimen contra la humanidad penado por los tribunales 
+internacionales.)
+
+```{r smarthome_ii}
+# ??????????
+```
+
+c. Imaginemos que el consumo total de energía $E$ está entre `low_e` y `high_e`. Para estimar $H$ a partir de esta información, calcularemos la probabilidad condicional $P(H=h|low\_e < E < high\_e)$. Crea una función `p_h_given_e(h, low_e, high_e, n_sims=10000)` para calcular esta probabilidad condicional utilizando simulaciones.
+
+```{r smarthome_iii}
+# ????
+```
+
+d. Supón que el consumo total de energía para el día es $28 < E < 30$ kWh. Utilizando la función anterior, grafica $P(H=h|28 < E < 30)$ y determina el número más probable de dispositivos de alta energía $H$ (la moda). Usa `Vectorize` para manejar entradas vectorizadas, y asegúrate de tener un número suficiente de simulaciones para obtener resultados precisos.
+
+```{r smarthome_iv}
+# ?????????/
+```
+
+**Indica aquí cuál es el valor más probable**
+
