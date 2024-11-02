@@ -129,20 +129,60 @@ Para ello, sigue estos pasos:
 a. Escribe el código necesario para simular la variable $T_{\text{fallo}}$. Almacena el resultado de las simulaciones en la variable `shutdown_sims` (pista: echa un vistazo a `pmin` y `pmax`).
 
 ```{r failure_i}
-shutdown_sims = NULL # ???
-# ...
+
+# Número de simulaciones
+num_simulations <- 10000
+
+# Parámetro lambda para la distribución exponencial
+lambda <- 1
+
+# Generar tiempos de fallo para cada VM
+D1 <- rexp(num_simulations, rate = lambda)
+D2 <- rexp(num_simulations, rate = lambda)
+D3 <- rexp(num_simulations, rate = lambda)
+
+# Calcular T_fallo como el máximo de D1, D2 y D3 para cada simulación
+shutdown_sims <- function(){
+  pmax(D1, D2, D3)
+}
+
+resultado <- shutdown_sims()
+head(resultado)
+
+
 ```
 
 b. Estima la distribución a partir de las simulaciones usando un **histograma** 
    (función `hist`; consulta la ayuda para dibujar una densidad de probabilidad 
    en lugar del número de ocurrencias) y...
+   
+```{r}
+
+# Dibujar el histograma de shutdown_sims como densidad
+hist(resultado, probability = TRUE, breaks = 100, 
+     main = "Histograma de la distribución de T_fallo",
+     xlab = "T_fallo", ylab = "Densidad", col = "lightblue",
+     border = "blue")
+
+
+```
+   
 
 c. ... compara el histograma obtenido con la distribución teórica. Para ello, implementa en primer lugar `f_theo` y luego dibuja en un mismo gráfico la 
    distribución obtenida por simulaciones y la dada por `f_theo`
    (usando `lines`).
  
 ```{r failure_ii_and_iii}
-f_theo = NULL # ???
+
+hist(resultado, probability = TRUE, breaks = 100, 
+     main = "Histograma de la distribución de T_fallo",
+     xlab = "T_fallo", ylab = "Densidad", col = "lightblue",
+     border = "blue")
+
+# Añadir la función de densidad teórica
+curve(3 * (1 - exp(-x))^2 * exp(-x), from = 0, to = max(resultado),
+      add = TRUE, col = "red", lwd = 2)
+
 # ...
 ```
 
