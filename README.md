@@ -1,2 +1,2 @@
 # Estadistica 💻
-Repositorio asignatura Estadistica
+Repositorio asignatura Estadistica (Rama MASTER)
